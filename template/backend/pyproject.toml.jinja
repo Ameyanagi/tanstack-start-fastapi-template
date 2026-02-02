@@ -1,0 +1,59 @@
+[project]
+name = "{{ project_name }}-backend"
+version = "0.1.0"
+description = "{{ description }}"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi[standard]",
+]
+
+[dependency-groups]
+dev = [
+    "httpx",
+    "mkdocs",
+    "mkdocs-material",
+    "mkdocstrings[python]",
+    "pytest",
+    "ruff",
+    "ty",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "ASYNC", "FAST", "PT", "RUF", "C4"]
+ignore = ["E501"]
+
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = [
+    "fastapi.Depends",
+    "fastapi.Query",
+    "fastapi.Path",
+    "fastapi.Body",
+    "fastapi.Header",
+    "fastapi.Cookie",
+    "fastapi.Form",
+    "fastapi.File",
+]
+
+[tool.ruff.lint.flake8-type-checking]
+runtime-evaluated-base-classes = ["pydantic.BaseModel"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.ty.rules]
+unresolved-import = "warn"
+# Suppressed: ty incorrectly flags CORSMiddleware keyword arguments.
+# Re-evaluate when ty stabilizes. https://github.com/astral-sh/ty/issues
+invalid-argument-type = "warn"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

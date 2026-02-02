@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+.venv/
+
+# Build output
+.output/
+.tanstack/
+dist/
+__pycache__/
+*.pyc
+
+# Generated
+frontend/src/client/
+backend/openapi.json
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Caches
+.ruff_cache/
+.ty/
+
+# MkDocs
+site/
+
+# Lefthook
+.lefthook-local.yml

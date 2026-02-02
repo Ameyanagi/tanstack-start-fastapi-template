@@ -1,0 +1,102 @@
+set dotenv-load
+
+# Default: show available commands
+default:
+    @just --list
+
+# Run frontend and backend dev servers in parallel
+dev:
+    just dev-backend & just dev-frontend & wait
+
+# Run frontend dev server
+dev-frontend:
+    cd frontend && bun run dev
+
+# Run backend dev server
+dev-backend:
+    cd backend && uv run fastapi dev app/main.py --port ${BACKEND_PORT:-8000}
+
+# Run all checks: lint, format, typecheck
+check: check-frontend check-backend check-openapi
+
+# Check frontend: biome + tsc
+check-frontend:
+    cd frontend && bun run check
+    cd frontend && bun run typecheck
+
+# Check backend: ruff + ty
+check-backend:
+    cd backend && uv run ruff check .
+    cd backend && uv run ruff format --check .
+    cd backend && uv run ty check
+
+# Validate OpenAPI schema is up to date
+check-openapi:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    cd backend
+    temp=$(mktemp)
+    trap 'rm -f "$temp"' EXIT
+    uv run python -c "import json,sys;sys.path.insert(0,'.');from app.main import app;print(json.dumps(app.openapi(),indent=2))" > "$temp"
+    if ! diff -q openapi.json "$temp" > /dev/null 2>&1; then
+        echo "ERROR: openapi.json is out of date. Run 'just gen-api' to update."
+        exit 1
+    fi
+    echo "OpenAPI schema is up to date."
+
+# Fix lint and format issues
+fix: fix-frontend fix-backend
+
+# Fix frontend issues
+fix-frontend:
+    cd frontend && bun run check:fix
+
+# Fix backend issues
+fix-backend:
+    cd backend && uv run ruff check --fix .
+    cd backend && uv run ruff format .
+
+# Generate OpenAPI client from static schema
+gen-api:
+    cd backend && uv run python scripts/generate_schema.py
+    cd frontend && bun run gen:api
+
+# Generate OpenAPI client from running backend server
+gen-api-live:
+    cd frontend && bunx --bun @hey-api/openapi-ts -i http://localhost:${BACKEND_PORT:-8000}/openapi.json -o src/client
+
+# Run all tests
+test: test-frontend test-backend
+
+# Run frontend tests
+test-frontend:
+    cd frontend && bun run test
+
+# Run backend tests
+test-backend:
+    cd backend && uv run pytest
+
+# Serve backend API docs locally
+docs-serve:
+    cd backend && uv run mkdocs serve
+
+# Build backend API docs
+docs-build:
+    cd backend && uv run mkdocs build
+
+# Build Docker images
+docker-build:
+    docker compose build
+
+# Run production stack with Docker
+docker-up:
+    docker compose up -d
+
+# Stop production stack
+docker-down:
+    docker compose down
+
+# Clean generated files
+clean:
+    rm -rf frontend/.output frontend/.tanstack frontend/node_modules frontend/src/client
+    rm -rf backend/.venv backend/__pycache__ backend/openapi.json backend/site

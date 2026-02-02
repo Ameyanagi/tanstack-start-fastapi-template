@@ -1,0 +1,135 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+PROJECT_NAME="{{ project_name }}"
+
+echo "Setting up ${PROJECT_NAME}..."
+
+# ---------------------------------------------------------------------------
+# 1. Scaffold frontend with shadcn
+# ---------------------------------------------------------------------------
+echo ""
+echo "==> Scaffolding frontend with shadcn..."
+
+# Save our overlay files before scaffolding overwrites the directory
+_overlay_dir=$(mktemp -d)
+cp -r frontend/ "${_overlay_dir}/frontend_overlay"
+
+# Remove the placeholder frontend directory
+rm -rf frontend
+
+# Scaffold a fresh TanStack Start project
+bunx --bun shadcn@latest create \
+  --preset "https://ui.shadcn.com/init?base=base&style=mira&baseColor=neutral&theme=indigo&iconLibrary=lucide&font=geist&menuAccent=subtle&menuColor=default&radius=medium&template=start&rtl=false" \
+  --template start \
+  frontend
+
+# Remove nested git repo created by shadcn (we use the root-level repo)
+rm -rf frontend/.git
+
+# Remove ESLint configuration if present (we use Biome)
+rm -f frontend/eslint.config.js frontend/.eslintrc.*
+
+# Overlay our config files onto the scaffold
+cp "${_overlay_dir}/frontend_overlay/biome.json" frontend/
+cp "${_overlay_dir}/frontend_overlay/openapi-ts.config.ts" frontend/
+cp "${_overlay_dir}/frontend_overlay/vitest.config.ts" frontend/
+cp "${_overlay_dir}/frontend_overlay/Dockerfile" frontend/
+cp "${_overlay_dir}/frontend_overlay/.dockerignore" frontend/
+mkdir -p frontend/src/__tests__
+cp "${_overlay_dir}/frontend_overlay/src/__tests__/smoke.test.ts" frontend/src/__tests__/
+
+rm -rf "${_overlay_dir}"
+
+# ---------------------------------------------------------------------------
+# 2. Install frontend dependencies
+# ---------------------------------------------------------------------------
+echo ""
+echo "==> Installing frontend dependencies..."
+cd frontend
+
+# Remove ESLint packages (may or may not exist depending on shadcn version)
+bun remove eslint @eslint/js typescript-eslint globals 2>/dev/null || true
+
+# Install Biome
+bun add -d @biomejs/biome
+
+# Install API client dependencies
+bun add @hey-api/client-fetch zod @tanstack/react-query
+bun add -d @hey-api/openapi-ts vitest jsdom
+
+# Merge custom scripts into package.json
+bun -e "
+const fs = require('fs');
+const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+pkg.name = '${PROJECT_NAME}-frontend';
+const scripts = pkg.scripts || {};
+delete scripts.lint;
+Object.assign(scripts, {
+  check: 'biome check .',
+  'check:fix': 'biome check --write .',
+  typecheck: 'tsc --noEmit',
+  test: 'vitest run',
+  'gen:api': 'bunx --bun @hey-api/openapi-ts'
+});
+pkg.scripts = scripts;
+fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+"
+
+# Auto-fix scaffolded code to conform to Biome rules
+bunx biome check --write --unsafe .
+
+cd ..
+
+# ---------------------------------------------------------------------------
+# 3. Install backend dependencies
+# ---------------------------------------------------------------------------
+echo ""
+echo "==> Installing backend dependencies..."
+cd backend
+uv sync
+cd ..
+
+# ---------------------------------------------------------------------------
+# 4. Generate API client
+# ---------------------------------------------------------------------------
+echo ""
+echo "==> Generating OpenAPI client..."
+cd backend && uv run python scripts/generate_schema.py && cd ..
+cd frontend && bun run gen:api && cd ..
+
+# ---------------------------------------------------------------------------
+# 5. Initialize version control
+# ---------------------------------------------------------------------------
+echo ""
+echo "==> Initializing version control..."
+jj git init --colocate
+mkdir -p .jj
+echo '/*' > .jj/.gitignore
+
+# ---------------------------------------------------------------------------
+# 6. Environment setup
+# ---------------------------------------------------------------------------
+cp .env.example .env
+
+# ---------------------------------------------------------------------------
+# 7. Install pre-commit hooks
+# ---------------------------------------------------------------------------
+echo ""
+echo "==> Installing pre-commit hooks..."
+lefthook install
+
+# ---------------------------------------------------------------------------
+# Done
+# ---------------------------------------------------------------------------
+echo ""
+echo "============================================"
+echo "  ${PROJECT_NAME} is ready!"
+echo "============================================"
+echo ""
+echo "  cd $(basename "$(pwd)") && just dev"
+echo ""
+echo "  Frontend: http://localhost:3000"
+echo "  Backend:  http://localhost:8000"
+echo "  API Docs: http://localhost:8000/docs"
+echo ""

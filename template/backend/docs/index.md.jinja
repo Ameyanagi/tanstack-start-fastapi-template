@@ -1,0 +1,35 @@
+# {{ project_name }} Backend API
+
+{{ description }}
+
+## Quick Start
+
+```bash
+just dev-backend
+```
+
+API will be available at:
+
+- **API**: http://localhost:8000
+- **Interactive docs**: http://localhost:8000/docs
+- **ReDoc**: http://localhost:8000/redoc
+
+## Project Structure
+
+```
+backend/
+├── app/
+│   ├── __init__.py
+│   ├── main.py          # FastAPI application
+│   └── routers/
+│       ├── __init__.py
+│       └── health.py    # Health check endpoint
+├── tests/
+│   ├── conftest.py      # Test fixtures
+│   └── test_health.py   # Health endpoint tests
+├── scripts/
+│   └── generate_schema.py
+├── docs/                # This documentation
+├── mkdocs.yml
+└── pyproject.toml
+```

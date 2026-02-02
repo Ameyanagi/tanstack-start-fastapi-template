@@ -1,0 +1,12 @@
+{
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "biomejs.biome",
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff"
+  },
+  "[markdown]": {
+    "editor.defaultFormatter": null
+  },
+  "typescript.tsdk": "frontend/node_modules/typescript/lib",
+  "biome.lspBin": "frontend/node_modules/@biomejs/biome/bin/biome"
+}

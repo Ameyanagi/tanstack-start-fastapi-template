@@ -1,0 +1,7 @@
+node_modules
+.output
+.tanstack
+.git
+*.md
+biome.json
+openapi-ts.config.ts

@@ -1,0 +1,7 @@
+.venv
+__pycache__
+.git
+*.md
+.ruff_cache
+openapi.json
+scripts/

@@ -1,0 +1,87 @@
+# {{ project_name }}
+
+{{ description }}
+
+## Prerequisites
+
+- [Bun](https://bun.sh) >= 1.2
+- [uv](https://docs.astral.sh/uv/) >= 0.6
+- [just](https://github.com/casey/just) >= 1.0
+- [jj](https://jj-vcs.github.io/jj/) >= 0.25 (colocated with git)
+- [Lefthook](https://github.com/evilmartians/lefthook) >= 1.0
+- [Docker](https://www.docker.com/) >= 24.0 (optional, for production builds)
+
+## Quick Start
+
+```bash
+cp .env.example .env
+just dev
+```
+
+- Frontend: http://localhost:3000
+- Backend: http://localhost:8000
+- API Docs: http://localhost:8000/docs
+
+## Commands
+
+```bash
+just dev              # Run frontend + backend
+just dev-frontend     # Frontend only
+just dev-backend      # Backend only
+just check            # Lint + format + typecheck + OpenAPI validation
+just test             # Run frontend + backend tests
+just fix              # Auto-fix lint and format issues
+just gen-api          # Generate API client from static schema
+just gen-api-live     # Generate API client from running server
+just docs-serve       # Serve backend API docs locally
+just docs-build       # Build backend API docs
+just docker-build     # Build Docker images
+just docker-up        # Start production stack
+just docker-down      # Stop production stack
+just clean            # Remove generated files
+```
+
+## Stack
+
+| Layer    | Technology                                         |
+| -------- | -------------------------------------------------- |
+| Frontend | TanStack Start, React, shadcn/ui (Mira), Tailwind |
+| Backend  | FastAPI, Python 3.13, Pydantic                     |
+| API      | hey-api + TanStack Query + Zod                     |
+| Lint     | Biome (frontend), Ruff (backend)                   |
+| Types    | tsc (frontend), ty (backend)                       |
+| Package  | Bun (frontend), uv (backend)                       |
+| Tasks    | just                                               |
+| VCS      | jj (colocated with git)                            |
+| Hooks    | Lefthook (parallel pre-commit)                     |
+| Docs     | MkDocs Material (backend API)                      |
+| CI       | GitHub Actions                                     |
+| Deploy   | Docker + docker compose                            |
+
+## Project Structure
+
+```
+├── frontend/          # TanStack Start + shadcn/ui
+├── backend/           # FastAPI + uv
+├── justfile           # Task runner
+├── docker-compose.yml # Production deployment
+├── .env.example       # Environment template
+└── .gitignore
+```
+
+## API Client Generation
+
+The frontend API client is auto-generated from the FastAPI OpenAPI schema.
+
+**Static** (no running server needed):
+```bash
+just gen-api
+```
+
+**Live** (from running backend):
+```bash
+just dev-backend &
+just gen-api-live
+```
+
+Generated code lands in `frontend/src/client/` and includes TypeScript types, Zod schemas, and TanStack Query hooks.
