@@ -45,11 +45,7 @@ your-project/
 Install [Copier](https://copier.readthedocs.io/) and generate a new project:
 
 ```bash
-# Install copier
-uv tool install copier
-
-# Generate a new project
-copier copy --trust gh:Ameyanagi/tanstack-start-fastapi-template my-project
+uvx copier copy --trust gh:Ameyanagi/tanstack-start-fastapi-template my-project
 ```
 
 You will be prompted for:
