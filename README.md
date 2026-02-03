@@ -36,13 +36,19 @@ your-project/
 - [just](https://github.com/casey/just) >= 1.0
 - [jj](https://jj-vcs.github.io/jj/) >= 0.25
 - [Lefthook](https://github.com/evilmartians/lefthook) >= 1.0
-- [Docker](https://www.docker.com/) >= 24.0 (optional)
+- [Docker](https://www.docker.com/) >= 24.0 (optional, for production builds)
+
+Verify all required tools are installed:
+
+```bash
+bun --version && uv --version && just --version && jj --version && lefthook --version
+```
 
 ## Usage
 
 ### Option 1: Copier (recommended)
 
-Install [Copier](https://copier.readthedocs.io/) and generate a new project:
+Generate a new project with [Copier](https://copier.readthedocs.io/):
 
 ```bash
 uvx copier copy --trust gh:Ameyanagi/tanstack-start-fastapi-template my-project
@@ -50,16 +56,21 @@ uvx copier copy --trust gh:Ameyanagi/tanstack-start-fastapi-template my-project
 
 You will be prompted for:
 
-| Variable       | Description                      | Example          |
-| -------------- | -------------------------------- | ---------------- |
-| `project_name` | Project name in kebab-case       | `my-cool-app`    |
-| `description`  | Short project description        | `My full-stack app` |
+| Variable       | Description                | Example             |
+| -------------- | -------------------------- | ------------------- |
+| `project_name` | Project name in kebab-case | `my-cool-app`       |
+| `description`  | Short project description  | `My full-stack app` |
 
-The setup script runs automatically after generation — it scaffolds the frontend via shadcn, installs all dependencies, generates the API client, initializes jj/git, and installs pre-commit hooks.
+After rendering the template files, Copier automatically runs a setup script that:
+
+1. Scaffolds the frontend via `bunx shadcn create` (removes ESLint, adds Biome)
+2. Installs all frontend and backend dependencies
+3. Generates the OpenAPI client from the FastAPI schema
+4. Initializes jj/git and installs Lefthook pre-commit hooks
 
 ### Option 2: AI agent skill
 
-If you use [Claude Code](https://docs.anthropic.com/en/docs/claude-code), [OpenCode](https://opencode.ai/), or another agent that supports skills, you can use the bundled `init-tanstack-fastapi` skill to scaffold the project interactively.
+If you use [Claude Code](https://docs.anthropic.com/en/docs/claude-code), [OpenCode](https://opencode.ai/), or another agent that supports skills, the bundled `init-tanstack-fastapi` skill can scaffold the project interactively. The skill definition lives in `.agents/skills/init-tanstack-fastapi/`.
 
 ## After Generation
 
@@ -72,16 +83,26 @@ just dev
 - Backend: http://localhost:8000
 - API Docs: http://localhost:8000/docs
 
-### Common Commands
+### Commands
 
 ```bash
 just dev              # Run frontend + backend
 just check            # Lint + format + typecheck + OpenAPI validation
 just test             # Run all tests
 just fix              # Auto-fix lint and format issues
-just gen-api          # Regenerate API client from schema
+just gen-api          # Regenerate API client from static schema
+just gen-api-live     # Regenerate API client from running backend
+just docs-serve       # Serve backend API docs locally
 just docker-build     # Build Docker images
 just docker-up        # Start production stack
+just docker-down      # Stop production stack
+just clean            # Remove generated files
 ```
 
 Run `just` with no arguments to see all available commands.
+
+## Next Steps
+
+1. **Add an API endpoint** — create a router in `backend/app/routers/`, include it in `main.py`, then run `just gen-api` to regenerate the frontend client.
+2. **Use the generated client** — import from `frontend/src/client/` for typed API calls with TanStack Query hooks and Zod validation.
+3. **Deploy** — adjust `docker-compose.yml` for your infrastructure and push to trigger the GitHub Actions CI pipeline.
