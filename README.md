@@ -70,7 +70,11 @@ After rendering the template files, Copier automatically runs a setup script tha
 
 ### Option 2: AI agent skill
 
-If you use [Claude Code](https://docs.anthropic.com/en/docs/claude-code), [OpenCode](https://opencode.ai/), or another agent that supports skills, the bundled `init-tanstack-fastapi` skill can scaffold the project interactively. The skill definition lives in `.agents/skills/init-tanstack-fastapi/`.
+If you use [Claude Code](https://docs.anthropic.com/en/docs/claude-code), [OpenCode](https://opencode.ai/), or another agent that supports skills, install the skill and use it to scaffold the project interactively:
+
+```bash
+npx skills add Ameyanagi/tanstack-start-fastapi-template
+```
 
 ## After Generation
 
